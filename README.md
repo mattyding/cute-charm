@@ -2,12 +2,12 @@
 
 ![Screenshot](assets/screenshot.png)
 
-A tool for generating a Gen 4 save file (DPPt / HGSS) with the Cute Charm shiny glitch set up. Give it a `.sav`, and it patches in the right TID/SID so that every Cute Charm wild encounter with your chosen natures is shiny.
+A tool for setting up the [Cute Charm shiny glitch](https://github.com/mattyding/cute-charm/blob/main/ui/info_dialog.py) in Gen 4 (DPPt / HGSS). Calculates the TID/SID you need and either patches it directly into a save file or generates RNG manipulation instructions to obtain it legitimately.
 
 Two modes:
 
-- **Direct Inject** — patches TID/SID directly into an existing save file and recalculates checksums
 - **RNG Manipulation** — EonTimer settings and step-by-step instructions for obtaining the TID/SID legitimately; includes a TAS / frame-advance output option
+- **Direct Inject** — patches TID/SID directly into an existing save file and recalculates checksums
 
 ## Setup
 
@@ -16,13 +16,9 @@ pip install -r requirements.txt
 python main.py
 ```
 
-Requires Python 3.10+ and PyQt6.
-
 ## Download
 
 Pre-built binaries are available on the [Releases](../../releases) page.
-
-macOS: on first launch Gatekeeper may block the app since it isn't signed — right-click → Open to bypass.
 
 To build from source on any platform:
 
