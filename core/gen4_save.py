@@ -85,12 +85,23 @@ def _block_crc_valid(save_bytes: bytes, base: int, cfg: GameConfig) -> bool:
     return expected == stored
 
 
+def active_trainer_offset(save_bytes: bytes, game: str) -> int:
+    """Return the absolute offset of the trainer1 record in the active (valid) partition."""
+    cfg = GAME_CONFIGS[game]
+    if _block_crc_valid(save_bytes, 0, cfg):
+        return cfg.trainer1_offset
+    return _BACKUP_OFFSET + cfg.trainer1_offset
+
+
 def verify_game(save_bytes: bytes, game: str) -> bool:
-    """Return True if the primary partition CRC matches the given game's layout."""
+    """Return True if either partition's CRC matches the given game's layout."""
     cfg = GAME_CONFIGS[game]
     if len(save_bytes) < cfg.general_block_size:
         return False
-    return _block_crc_valid(save_bytes, 0, cfg)
+    if _block_crc_valid(save_bytes, 0, cfg):
+        return True
+    return (len(save_bytes) >= _BACKUP_OFFSET + cfg.general_block_size
+            and _block_crc_valid(save_bytes, _BACKUP_OFFSET, cfg))
 
 
 def patch_save(
@@ -118,8 +129,10 @@ def patch_save(
             f"{game} requires at least {min_size} bytes."
         )
 
-    if not _block_crc_valid(save_bytes, 0, cfg):
-        # Check if any other game config matches, to give a useful hint
+    primary_valid = _block_crc_valid(save_bytes, 0, cfg)
+    backup_valid  = _block_crc_valid(save_bytes, _BACKUP_OFFSET, cfg)
+
+    if not primary_valid and not backup_valid:
         matches = [g for g, c in GAME_CONFIGS.items() if g != game and verify_game(save_bytes, g)]
         hint = f"  The checksum matches: {', '.join(matches)}." if matches else ""
         raise ValueError(
@@ -130,6 +143,7 @@ def patch_save(
 
     name_bytes = None if keep_name else encode_name(name)
     save = bytearray(save_bytes)
-    for base in (0, _BACKUP_OFFSET):
-        _patch_block(save, base, cfg, name_bytes, gender, tid, sid)
+    for base, valid in ((0, primary_valid), (_BACKUP_OFFSET, backup_valid)):
+        if valid:
+            _patch_block(save, base, cfg, name_bytes, gender, tid, sid)
     return bytes(save)

@@ -18,7 +18,7 @@ from core.cute_charm import (
     shiny_groups, find_tid_sid, GENDER_RATIOS,
 )
 from core.gen4_encoding import validate_name
-from core.gen4_save import patch_save, GAME_CONFIGS
+from core.gen4_save import patch_save, GAME_CONFIGS, active_trainer_offset
 from core.rng_timer import find_seed_for_tid_sid, build_instructions, build_tas_instructions
 from ui.info_dialog import InfoDialog
 
@@ -391,8 +391,7 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Read error", str(e))
             return
 
-        cfg = GAME_CONFIGS[game]
-        existing_gender = original[cfg.trainer1_offset + 0x18]
+        existing_gender = original[active_trainer_offset(original, game) + 0x18]
 
         try:
             patched = patch_save(original, game, "", existing_gender, tid, sid, keep_name=True)
